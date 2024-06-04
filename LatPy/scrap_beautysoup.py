@@ -2,7 +2,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
 # Pengambilan konten
-url = "https://www.youtube.com/watch?v=ZlL4QLFHywI"
+url = "https://www.youtube.com/watch?v=ibpVSlGyG1c"
 page = urlopen(url)
 html = page.read().decode("utf-8")
 
