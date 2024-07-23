@@ -1,205 +1,310 @@
 ## Dimas Daffa Ernanda
 ## A11.2022.14079
 
-# Prediksi Gaji Masyarakat 10 Tahun kedepan
+# Klasifikasi Penyakit Mata Menggunakan Deep Learning
 
 ## Ringkasan dan Permasalahan
 
-Hasil penelitian ini adalah prediksi nilai UMP dari 26 Provinsi di Indonesia. Sebelum prediksi dilakukan, UMP di Indonesia terus meningkat seiring dengan pertumbuhan ekonomi. Prediksi menggunakan model Machine Learning Linear Regression memperpanjang dataset dari 1997 hingga 2032, menunjukkan perkembangan signifikan. Prediksi ini menunjukkan potensi kemajuan ekonomi Indonesia.
+Proyek ini bertujuan untuk mengklasifikasikan berbagai penyakit mata menggunakan teknik deep learning. Menggunakan dataset gambar mata, model dilatih untuk mengidentifikasi dan mengklasifikasikan berbagai kondisi mata.
+Diagnosis penyakit mata yang akurat dan cepat sangat penting untuk pengobatan yang tepat. Namun, hal ini dapat menjadi tantangan bagi para profesional medis karena membutuhkan keahlian khusus dan waktu yang lama.
 
 ## Tujuan
 
-Menganalisis tren gaji historis di Indonesia dari 1997 hingga 2022.
-Memprediksi gaji hingga tahun 2032 menggunakan regresi linear.
-Mengidentifikasi wilayah dengan gaji tertinggi dan faktor-faktor penyebabnya.
-Menilai dan memprediksi tingkat pertumbuhan gaji rata-rata tahunan.
-Memvisualisasikan perubahan gaji antar wilayah dan waktu.
-Menyediakan informasi untuk membantu pengambilan keputusan terkait pasar tenaga kerja dan perencanaan ekonomi di Indonesia.
+Mengembangkan model deep learning yang dapat mengklasifikasikan penyakit mata 
+Membantu mempercepat proses diagnosis penyakit mata
+Menyediakan alat bantu untuk para profesional medis dalam mengidentifikasi penyakit mata
 
 ## Model
 
-Penggunaan model regresi linier yang diperkuat dengan jaringan saraf tiruan (Neural Network).
+Convolutional Neural Network (CNN).
 
 ## Alur Project
 
-Pengumpulan dan Ekstraksi Data
-
-    File zip berisi data UMP Indonesia dari tahun 1997 hingga 2022 diunduh dan diekstraksi.
-
-Import dan Pembersihan Data
-
-    Data diimport menggunakan pandas dan berbagai library lainnya, kemudian dilakukan pembersihan data, termasuk konversi nilai UMP menjadi numerik.
-
-Analisis Data Awal
-
-    Data awal dianalisis dengan visualisasi menggunakan seaborn untuk melihat tren dan pertumbuhan rata-rata UMP tiap tahun.
-    Pertumbuhan UMP dihitung dan divisualisasikan dalam bentuk bar plot.
-
-Analisis Per Provinsi
-
-    Lima provinsi dengan nilai UMP tertinggi diidentifikasi dan divisualisasikan.
-    Data diurutkan berdasarkan tahun untuk setiap provinsi dan model regresi linear dibuat untuk setiap provinsi.
-
-Prediksi UMP Masa Depan
-
-    Prediksi UMP untuk sepuluh tahun ke depan (2023-2032) dilakukan menggunakan model regresi linear yang telah dibuat.
-    Data hasil prediksi digabungkan dengan data historis untuk analisis lebih lanjut.
-
-Visualisasi Prediksi
-
-    Pertumbuhan rata-rata UMP dari tahun 2022 hingga 2032 divisualisasikan.
-    Perubahan nilai UMP dari tahun 1997 hingga 2032 divisualisasikan dalam bentuk plot garis.
-    Visualisasi dinamis menggunakan plotly untuk melihat perubahan UMP tiap provinsi dari tahun ke tahun.
+Persiapan Dataset
+Eksplorasi Data dan Preprocessing
+Augmentasi Data
+Pembuatan Model
+Pelatihan Model
+Evaluasi Model
+Prediksi dan Visualisasi Hasil
+Penjelasan Dataset, EDA dan Proses Features Dataset:
 
 ## Dataset
 
-Dataset berasal dari Kaggle
-Dataset ini berisi informasi tentang Upah Minimum Provinsi (UMP) di Indonesia dari tahun 1997 hingga 2022.
-Data ini mencakup UMP untuk berbagai provinsi di Indonesia sepanjang periode 
-
-    Region = Province selected
-    Salary = Number of salary in IDR
-    Year = Years when the salary applied
+Dataset yang digunakan adalah dataset yang diambil dari kaggle.
+Dataset berisi gambar-gambar mata dengan berbagai kondisi penyakit seperti Cataract, Glaucoma, Diabetic Retinopathy dan juga mata normal.
+Data dibagi menjadi train set, validation, dan test set
 
 
+### EDA (Exploratory Data Analysis)
 
-### EDA (Exploratory Data Analysis)??
-
-Import Libraries dan Data
-Preview Data
-![App Screenshot](./image/image2.png)
-Distribusi Nilai UMP
-![App Screenshot](./image/image3.png)
-Rata-rata UMP per Tahun
-![App Screenshot](./image/image4.png)
-Top 5 Provinsi dengan UMP Tertinggi
-![App Screenshot](./image/image.png)
+Gambar-gambar ditampilkan secara acak untuk memeriksa kualitas dan variasi dataset
+Data augmentasi diterapkan pada set pelatihan (rotasi, flip horizontal dan vertikal, perubahan kecerahan)
+Label kelas diekstrak dan dienkode secara kategorikal
 
 ### Proses features Dataset
-Preprocessing Data
-ump_data = ump_data.reset_index(drop=True).groupby('REGION').apply(lambda x: x.sort_values('YEAR'))
 
-models = {}
-for provinsi in ump_data['REGION'].unique():
-    X = ump_data.loc[ump_data['REGION'] == provinsi]['YEAR'].values.reshape(-1, 1)
-    y = ump_data.loc[ump_data['REGION'] == provinsi]['SALARY'].values.reshape(-1, 1)
-    model = LinearRegression().fit(X, y)
-    models[provinsi] = model
+1. Pembacaan dan Organisasi Data:
+   ```python
+   class EyeDiseaseDataset:
+       def __init__(self, dataDir):
+           self.data_dir = dataDir
+
+       def dataPaths(self):
+           filepaths = []
+           labels = []
+           folds = os.listdir(self.data_dir)
+           for fold in folds:
+               foldPath = os.path.join(self.data_dir, fold)
+               filelist = os.listdir(foldPath)
+               for file in filelist:
+                   fpath = os.path.join(foldPath, file)
+                   filepaths.append(fpath)
+                   labels.append(fold)
+           return filepaths, labels
+   ```
+   - Kode ini membaca path file gambar dan labelnya dari direktori dataset.
+
+2. Pembuatan DataFrame:
+   ```python
+   def dataFrame(self, files, labels):
+       Fseries = pd.Series(files, name='filepaths')
+       Lseries = pd.Series(labels, name='labels')
+       return pd.concat([Fseries, Lseries], axis=1)
+   ```
+   - Membuat DataFrame yang berisi path file dan label.
+
+3. Pembagian Dataset:
+   ```python
+   def split_(self):
+       files, labels = self.dataPaths()
+       df = self.dataFrame(files, labels)
+       strat = df['labels']
+       trainData, dummyData = train_test_split(df, train_size=0.8, shuffle=True, random_state=42, stratify=strat)
+       strat = dummyData['labels']
+       validData, testData = train_test_split(dummyData, train_size=0.5, shuffle=True, random_state=42, stratify=strat)
+       return trainData, validData, testData
+   ```
+   - Membagi dataset menjadi train (80%), validation, dan test set (masing-masing 10%).
+
+4. Augmentasi Data:
+   ```python
+   def augment_data(train_df, valid_df, test_df, batch_size=16):
+       img_size = (256,256)
+       channels = 3
+       color = 'rgb'
+
+       train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+                 rotation_range=30,
+                 horizontal_flip=True,
+                 vertical_flip=True,
+                 brightness_range=[0.5, 1.5])
+
+       valid_test_datagen = tf.keras.preprocessing.image.ImageDataGenerator()
+   ```
+   - Mengatur ukuran gambar menjadi 256x256 piksel
+   - Menggunakan 3 channel warna (RGB)
+   - Menerapkan augmentasi pada training set: rotasi, flip horizontal dan vertikal, perubahan kecerahan
+
+5. Preprocessing Gambar:
+   - Dilakukan secara implisit oleh ImageDataGenerator:
+     - Rescaling pixel values ke range [0,1]
+     - Resizing gambar ke 256x256
+     - Konversi ke format tensor yang sesuai untuk input model
+
+6. Encoding Label:
+   - Labels diencode secara otomatis menjadi one-hot encoding oleh `flow_from_dataframe` dengan parameter `class_mode='categorical'`
 
 ## Proses Learning/Modeling
+1. Persiapan Model Dasar:
+```python
+from tensorflow.keras.applications import EfficientNetB3
 
-1. Prediksi UMP Masa Depan
-future_years = np.array(range(ump_data['YEAR'].max() + 1, ump_data['YEAR'].max() + 11))
-future_ump = []
-for provinsi in ump_data['REGION'].unique():
-    model = models[provinsi]
-    future_ump_provinsi = model.predict(future_years.reshape(-1, 1))
-    future_ump.extend(future_ump_provinsi)
+base_model = EfficientNetB3(weights='imagenet', include_top=False, input_shape=(256, 256, 3))
 
-future_df = pd.DataFrame({
-    'REGION': np.repeat(ump_data['REGION'].unique(), 10),
-    'YEAR': np.tile(range(ump_data['YEAR'].max() + 1, ump_data['YEAR'].max() + 11), ump_data['REGION'].nunique()),
-    'SALARY': future_ump
-})
+for layer in base_model.layers:
+    layer.trainable = False
+```
+- Menggunakan EfficientNetB3 pre-trained pada ImageNet sebagai model dasar
+- Mengatur semua layer dari model dasar menjadi non-trainable (transfer learning)
 
-future_df['SALARY'] = future_df['SALARY'].astype(int)
+2. Arsitektur Model:
+```python
+x = base_model.output
+x = GlobalAveragePooling2D()(x)
+x = Dense(512, activation='relu', kernel_regularizer=regularizers.l2(0.01))(x)
+predictions = Dense(classes, activation='softmax', kernel_regularizer=regularizers.l2(0.01))(x)
 
-2. Menggabungkan Data
+model = Model(inputs=base_model.input, outputs=predictions)
+```
+- Menambahkan GlobalAveragePooling2D untuk mengurangi dimensi output
+- Dense layer dengan 512 unit dan aktivasi ReLU
+- Output layer dengan jumlah unit sesuai jumlah kelas, menggunakan aktivasi softmax
+- Menggunakan L2 regularization untuk mencegah overfitting
 
-'combined_df = pd.concat([ump_data, future_df], axis=0, ignore_index=True)'
+3. Kompilasi Model:
+```python
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
-3. Visualisasi Prediksi UMP Masa Depan
+model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+```
+- Menggunakan optimizer Adam dengan learning rate 0.001
+- Loss function: Categorical Crossentropy (standar untuk klasifikasi multi-kelas)
+- Metrik evaluasi: Accuracy
 
-AVG = combined_df.sort_values(by='YEAR', ascending=True)
-AVG['Growth'] = [0] + [AVG['SALARY'].iloc[i] - AVG['SALARY'].iloc[i-1] for i in range(1, len(AVG))]
+4. Pelatihan Model:
+```python
+history = model.fit(
+    train_augmented,
+    epochs=15,
+    validation_data=valid_augmented,
+)
+```
+Epoch 1/15
+211/211 [==============================] - 115s 467ms/step - loss: 2.3605 - accuracy: 0.7358 - val_loss: 1.0202 - val_accuracy: 0.7630
+Epoch 2/15
+211/211 [==============================] - 83s 395ms/step - loss: 0.8125 - accuracy: 0.7874 - val_loss: 0.7430 - val_accuracy: 0.8009
+Epoch 3/15
+211/211 [==============================] - 82s 386ms/step - loss: 0.7430 - accuracy: 0.7839 - val_loss: 0.7960 - val_accuracy: 0.7417
+Epoch 4/15
+211/211 [==============================] - 81s 384ms/step - loss: 0.7201 - accuracy: 0.7859 - val_loss: 0.7568 - val_accuracy: 0.7701
+Epoch 5/15
+211/211 [==============================] - 84s 399ms/step - loss: 0.6811 - accuracy: 0.7945 - val_loss: 0.7185 - val_accuracy: 0.7938
+Epoch 6/15
+211/211 [==============================] - 82s 388ms/step - loss: 0.6733 - accuracy: 0.7951 - val_loss: 0.7126 - val_accuracy: 0.7867
+Epoch 7/15
+211/211 [==============================] - 83s 396ms/step - loss: 0.6869 - accuracy: 0.7925 - val_loss: 0.7431 - val_accuracy: 0.7512
+Epoch 8/15
+211/211 [==============================] - 82s 390ms/step - loss: 0.6727 - accuracy: 0.7942 - val_loss: 0.6922 - val_accuracy: 0.8152
+Epoch 9/15
+211/211 [==============================] - 81s 383ms/step - loss: 0.6792 - accuracy: 0.7919 - val_loss: 0.7438 - val_accuracy: 0.7796
+Epoch 10/15
+211/211 [==============================] - 82s 387ms/step - loss: 0.6589 - accuracy: 0.8034 - val_loss: 0.6610 - val_accuracy: 0.8223
+Epoch 11/15
+211/211 [==============================] - 82s 388ms/step - loss: 0.6496 - accuracy: 0.8023 - val_loss: 0.6195 - val_accuracy: 0.8246
+Epoch 12/15
+211/211 [==============================] - 82s 387ms/step - loss: 0.6407 - accuracy: 0.8034 - val_loss: 0.6381 - val_accuracy: 0.8436
+Epoch 13/15
+211/211 [==============================] - 81s 382ms/step - loss: 0.6546 - accuracy: 0.8008 - val_loss: 0.6800 - val_accuracy: 0.8270
+Epoch 14/15
+211/211 [==============================] - 83s 392ms/step - loss: 0.6314 - accuracy: 0.8123 - val_loss: 0.6387 - val_accuracy: 0.8318
+Epoch 15/15
+211/211 [==============================] - 80s 381ms/step - loss: 0.6238 - accuracy: 0.8117 - val_loss: 0.5712 - val_accuracy: 0.8578
 
-plt.figure(figsize=(15, 12))
-plt.title("Average salary growth from 2022 - 2032", size=20, pad=20)
-AVG_filtered = AVG.query('YEAR >= 2022 and YEAR <= 2032')
+- Melatih model selama 15 epoch
+- Menggunakan data augmentasi untuk training set
+- Menggunakan validation set untuk memonitor performa selama pelatihan
 
-ax = sns.barplot(x='YEAR', y='Growth', data=AVG_filtered, color='green', edgecolor="black")
+5. Monitoring Pelatihan:
+```python
+train_accuracy = history.history['accuracy']
+val_accuracy = history.history['val_accuracy']
+print("Training Accuracy:", train_accuracy[-1])
+print("Validation Accuracy:", val_accuracy[-1])
 
-
-for p in ax.patches:
-    ax.annotate(format(p.get_height(), '.2f'),
-                (p.get_x() + p.get_width() / 2., p.get_height()),
-                ha='center', va='center',
-                xytext=(0, 10),
-                textcoords='offset points')
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
 plt.show()
 
-sns.catplot(x='YEAR', y='SALARY', data=combined_df, kind='point', aspect=5)
-
-import plotly.express as px
-fig = px.bar(combined_df, x='REGION', y="SALARY", color="REGION",
-             animation_frame="YEAR", range_y=[0, 7000000])
-fig.show()
-
-
-top_5_regions = combined_df.groupby('REGION')['SALARY'].max().sort_values(ascending=False)[:5]
-top_5_regions = top_5_regions.reset_index()
-
-plt.figure(figsize=(16, 8))
-graph = sns.barplot(x='REGION', y='SALARY', data=top_5_regions, order=top_5_regions['REGION'])
-graph.set_xticklabels(graph.get_xticklabels(), rotation=90)
-plt.xlabel('Region', fontsize=15)
-plt.ylabel('Salary', fontsize=15)
-plt.title('Top 5 Regions with the Highest Salary', fontsize=20)
-
-for index, row in top_5_regions.iterrows():
-    graph.annotate(format(int(row['SALARY']), ','),
-                   (row.name, row['SALARY']),
-                   ha='center', va='center',
-                   xytext=(0, 10),
-                   textcoords='offset points')
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
 plt.show()
+```
+- Mencetak akurasi akhir untuk training dan validation set
+- Memvisualisasikan kurva loss dan akurasi selama pelatihan
 
+6. Evaluasi Model:
+```python
+def plot_actual_vs_predicted(model, test_data, num_samples=3):
+    test_images, test_labels = next(iter(test_data))
+    predictions = model.predict(test_images)
+```
+- Fungsi ini digunakan untuk mengevaluasi performa model pada beberapa sampel test
 
 ## Perfoma Model
+1. Akurasi Akhir:
+```python
+train_accuracy = history.history['accuracy']
+val_accuracy = history.history['val_accuracy']
+print("Training Accuracy:", train_accuracy[-1])
+print("Validation Accuracy:", val_accuracy[-1])
+```
+- Menampilkan akurasi akhir untuk data training dan validasi
+- Akurasi ini menunjukkan persentase prediksi yang benar pada kedua set data
 
-Koefisien Determinasi (R²):
-    R² berkisar antara 0.80 hingga 0.98 untuk berbagai region, yang menunjukkan bahwa model Anda mampu menjelaskan sebagian besar variabilitas data. Nilai R² yang tinggi (di atas 0.9) menunjukkan bahwa model regresi linier Anda sangat baik dalam menjelaskan data pada sebagian besar region.
+2. Visualisasi Kurva Loss:
+```python
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+```
+- Menampilkan grafik loss untuk data training dan validasi selama pelatihan
+- Membantu mengidentifikasi overfitting (jika validation loss mulai meningkat sementara training loss terus menurun)
+- Menunjukkan seberapa baik model belajar dan generalisasi
+![App Screenshot](./image/loss.png)
 
-Mean Absolute Error (MAE):
-    MAE bervariasi dari sekitar 62,896.46 hingga 375,131.34. Nilai MAE yang lebih rendah menunjukkan bahwa prediksi model Anda lebih akurat, dan MAE di bawah 200,000 pada sebagian besar region menunjukkan bahwa kesalahan prediksi relatif kecil.
+3. Visualisasi Kurva Akurasi:
+```python
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
+```
+- Menampilkan grafik akurasi untuk data training dan validasi selama pelatihan
+- Membantu melihat peningkatan performa model seiring berjalannya epoch
+- Dapat mengindikasikan overfitting jika ada gap besar antara training dan validation accuracy
+![App Screenshot](./image/akurasi.png)
 
-Mean Squared Error (MSE):
-    MSE bervariasi cukup luas, tetapi sebagian besar nilai MSE menunjukkan bahwa model Anda dapat memprediksi dengan baik. MSE yang lebih tinggi menunjukkan variabilitas yang lebih besar dalam prediksi model.
-
-    Secara keseluruhan, model regresi linier ini memiliki performa yang solid dengan R² yang tinggi dan MAE serta MSE yang bervariasi. Beberapa region, seperti Papua Barat, menunjukkan performa terbaik dengan R² mendekati 1 dan MAE yang sangat rendah. Namun, ada beberapa region, seperti Kalimantan Timur dan Gorontalo, yang memiliki R² lebih rendah dan MAE lebih tinggi, menunjukkan bahwa model mungkin kurang fit pada data tersebut.
+4. Evaluasi Visual pada Data Test:
+```python
+def plot_actual_vs_predicted(model, test_data, num_samples=3):
+    test_images, test_labels = next(iter(test_data))
+    predictions = model.predict(test_images)
+    
+    class_labels = list(train_augmented.class_indices.keys())
+    
+    sample_indices = np.random.choice(range(len(test_images)), num_samples, replace=False)
+    
+    for i in sample_indices:
+        actual_label = class_labels[np.argmax(test_labels[i])]
+        predicted_label = class_labels[np.argmax(predictions[i])]
+        plt.figure(figsize=(8, 4))
+        # Actual Image
+        plt.subplot(1, 2, 1)
+        plt.imshow(test_images[i].astype(np.uint8))
+        plt.title(f'Actual: {actual_label}')
+        plt.axis('off')
+        # Predicted Image
+        plt.subplot(1, 2, 2)
+        plt.imshow(test_images[i].astype(np.uint8))
+        plt.title(f'Predicted: {predicted_label}')
+        plt.axis('off')
+        plt.show()
+```
+- Fungsi ini memvisualisasikan performa model pada beberapa sampel dari data test
+- Menampilkan gambar asli dengan label sebenarnya dan prediksi model
+- Membantu menilai kualitas prediksi model secara visual
+![App Screenshot](./image/hasil.png)
 
 ## Diskusi Hasil dan Kesimpulan
 
 ### Hasil
 
-Tren Kenaikan Gaji:
-Terdapat tren kenaikan gaji rata-rata di Indonesia dari tahun ke tahun.
-Visualisasi menunjukkan peningkatan yang konsisten, dengan beberapa tahun mengalami pertumbuhan yang lebih signifikan dibandingkan tahun lainnya.
-
-Pertumbuhan Gaji Rata-rata:
-Grafik batang menunjukkan pertumbuhan gaji rata-rata tahunan dari 2022 hingga 2032.
-Pertumbuhan gaji diprediksi akan terus meningkat, namun dengan laju yang bervariasi setiap tahunnya.
-
-Lima Wilayah dengan Gaji Tertinggi:
-Analisis menunjukkan lima wilayah dengan gaji tertinggi di Indonesia.
-DKI Jakarta konsisten menjadi wilayah dengan gaji tertinggi, diikuti oleh provinsi-provinsi lain yang kemungkinan besar merupakan daerah industri atau pusat ekonomi.
-
-Variasi Gaji antar Wilayah:
-Terdapat kesenjangan gaji yang signifikan antar wilayah di Indonesia.
-Beberapa wilayah menunjukkan pertumbuhan gaji yang lebih cepat dibandingkan wilayah lain.
-
-Prediksi Gaji Masa Depan:
-Model regresi linear digunakan untuk memprediksi gaji hingga tahun 2032.
-Prediksi menunjukkan bahwa gaji akan terus meningkat di semua wilayah, namun dengan laju yang berbeda-beda.
-
-Visualisasi Dinamis:
-Grafik animasi menunjukkan perubahan gaji di berbagai wilayah dari tahun ke tahun.
-Visualisasi ini memperlihatkan dinamika perubahan peringkat wilayah berdasarkan tingkat gaji.
+Model menunjukkan peningkatan akurasi selama pelatihan
+Visualisasi hasil menunjukkan kemampuan model dalam mengklasifikasikan penyakit mata
+Penggunaan EfficientNetB3 dan teknik transfer learning efektif untuk tugas klasifikasi ini
+Augmentasi data membantu meningkatkan generalisasi model
 
 ## Kesimpulan
-Gaji di Indonesia menunjukkan tren peningkatan yang konsisten dan diproyeksikan akan terus naik hingga tahun 2032.
-Terdapat kesenjangan gaji yang signifikan antar wilayah, dengan DKI Jakarta secara konsisten memimpin sebagai wilayah dengan gaji tertinggi.
-Pertumbuhan gaji bervariasi antar wilayah dan antar tahun, mencerminkan dinamika ekonomi yang kompleks di berbagai daerah di Indonesia.
-Prediksi masa depan menunjukkan potensi peningkatan gaji di semua wilayah, namun kesenjangan antar wilayah kemungkinan akan tetap ada.
-Analisis ini dapat menjadi dasar untuk pembuat kebijakan dalam merencanakan strategi pembangunan ekonomi dan pemerataan kesejahteraan di seluruh wilayah Indonesia.
-![App Screenshot](./image/hasil.png)
+Model deep learning yang dikembangkan menunjukkan potensi yang baik dalam mengklasifikasikan penyakit mata. Dengan pengembangan lebih lanjut, sistem ini dapat menjadi alat yang berharga bagi profesional medis dalam diagnosis penyakit mata.
