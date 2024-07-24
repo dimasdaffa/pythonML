@@ -142,14 +142,14 @@ model = Model(inputs=base_model.input, outputs=predictions)
 - Output layer dengan jumlah unit sesuai jumlah kelas, menggunakan aktivasi softmax
 - Menggunakan L2 regularization untuk mencegah overfitting
 
-3. Kompilasi Model:
+3. Compile Model:
 ```python
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 ```
 - Menggunakan optimizer Adam dengan learning rate 0.001
-- Loss function: Categorical Crossentropy (standar untuk klasifikasi multi-kelas)
+- Loss function: Categorical Crossentropy (standar untuk klasifikasi multi-class)
 - Metrik evaluasi: Accuracy
 
 4. Pelatihan Model:
@@ -252,7 +252,7 @@ plt.show()
 - Menunjukkan seberapa baik model belajar dan generalisasi
 ![App Screenshot](./image/loss.png)
 
-3. Visualisasi Kurva Akurasi:
+3. Visualisasi Kurva Accuracy:
 ```python
 plt.plot(history.history['accuracy'], label='Training Accuracy')
 plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
