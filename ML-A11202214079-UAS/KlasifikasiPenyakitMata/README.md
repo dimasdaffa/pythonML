@@ -31,6 +31,7 @@ Penjelasan Dataset, EDA dan Proses Features Dataset:
 
 ## Dataset
 
+![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
 Dataset yang digunakan adalah dataset yang diambil dari kaggle.
 Dataset berisi gambar-gambar mata dengan berbagai kondisi penyakit seperti Cataract, Glaucoma, Diabetic Retinopathy dan juga mata normal.
 Data dibagi menjadi train set, validation, dan test set
